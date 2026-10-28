@@ -11,6 +11,9 @@
 
 (function () {
   "use strict";
+  var localHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  var configuredApiBase = document.body.getAttribute("data-api-base") || "";
+  var apiBase = localHost ? "" : configuredApiBase;
 
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var hasGsap = Boolean(window.gsap && window.ScrollTrigger);
@@ -245,7 +248,7 @@
       contactMessage.classList.remove("is-error");
 
       try {
-        var response = await fetch("/api/contact", {
+        var response = await fetch(new URL("/api/contact", apiBase || window.location.origin), {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify(Object.fromEntries(new FormData(contactForm))),
@@ -316,7 +319,7 @@
       chatMessages.scrollTop = chatMessages.scrollHeight;
 
       try {
-        var response = await fetch("/api/chat", {
+        var response = await fetch(new URL("/api/chat", apiBase || window.location.origin), {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ message: message }),

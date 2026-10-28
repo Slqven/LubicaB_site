@@ -8,6 +8,12 @@ const publicRoot = resolve(root, "public");
 const port = Number(process.env.PORT || 3000);
 const maxBodyBytesContact = 16_000;
 const maxBodyBytesChat = 2_000;
+const allowedOrigins = new Set(
+  (process.env.ALLOWED_ORIGINS || "http://localhost:3000,http://127.0.0.1:3000")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+);
 
 const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000);
 const RATE_LIMIT_MAX_REQUESTS = Number(process.env.RATE_LIMIT_MAX_REQUESTS || 5);
@@ -434,6 +440,28 @@ const server = createServer(async (request, response) => {
   
   // Add security headers to all responses
   applySecurityHeaders(response);
+
+  const isApiRoute = ["/api/contact", "/api/chat", "/api/health"].includes(url.pathname);
+  const origin = request.headers.origin;
+  if (isApiRoute && origin) {
+    if (!allowedOrigins.has(origin)) {
+      sendJson(response, 403, { error: "This website is not allowed to use the API." });
+      logRequest(request, 403);
+      return;
+    }
+
+    response.setHeader("access-control-allow-origin", origin);
+    response.setHeader("access-control-allow-methods", "GET, POST, OPTIONS");
+    response.setHeader("access-control-allow-headers", "Content-Type");
+    response.setHeader("access-control-max-age", "600");
+    response.setHeader("vary", "Origin");
+  }
+
+  if (request.method === "OPTIONS" && isApiRoute) {
+    response.writeHead(204);
+    response.end();
+    return;
+  }
 
   // Health check endpoint
   if (request.method === "GET" && (url.pathname === "/health" || url.pathname === "/api/health")) {

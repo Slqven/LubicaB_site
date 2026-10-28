@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: lubica-interpreter-api
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.14.0
+      - key: NODE_ENV
+        value: production
+      - key: ALLOWED_ORIGINS
+        value: https://slqven.github.io
+      - key: SITE_NAME
+        value: Ljubica Bielikova — English Teacher, Language Auditor, Translator, Interpreter
+      - key: INTERPRETER_NAME
+        value: Ljubica Bielikova
+      - key: INTERPRETER_EMAIL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "60000"
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: "5"
