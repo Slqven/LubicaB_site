@@ -1,24 +1,32 @@
 # GitHub Pages and Render deployment
 
-GitHub Pages serves the static frontend; Render runs the Node.js API used by the enquiry form and chatbot. Deploy the backend before publishing Pages so both features have a live API.
+The site is published at <https://slqven.github.io/LubicaB_site/>. GitHub Pages serves the static frontend; Render runs the Node.js API used by the enquiry form and chatbot.
 
-## 1. Deploy the backend on Render
+## Current services
 
-1. In Render, choose **New → Blueprint**, select this GitHub repository and the `master` branch, then deploy the `render.yaml` Blueprint.
-2. In the new Render service's **Environment** settings, enter `INTERPRETER_EMAIL`, `RESEND_API_KEY`, `EMAIL_FROM`, and `OPENAI_API_KEY`. Use a sender address verified with Resend. Keep these values in Render, not in frontend files or GitHub.
-3. Wait for the service to become live and check <https://lubica-interpreter-api.onrender.com/health> returns `{"status":"ok"}`. The Pages frontend is configured to use this Render URL.
+- **Pages:** <https://slqven.github.io/LubicaB_site/>
+- **API health:** <https://lubica-interpreter-api.onrender.com/health>
+- **Render service:** `lubica-interpreter-api`, Free plan, Frankfurt (EU Central)
+- **GitHub workflow:** `.github/workflows/deploy-pages.yml` (`workflow_dispatch`)
+- **CORS:** Render allows the `https://slqven.github.io` origin.
 
-## 2. Publish the frontend on GitHub Pages
+The API is live, but enquiry emails and chatbot replies need provider credentials before they can work.
 
-1. In GitHub, open **Settings → Pages** and set the build and deployment source to **GitHub Actions**.
-2. In **Actions → Deploy GitHub Pages → Run workflow**, manually run the deployment after the Render health check succeeds.
-3. The site URL is <https://slqven.github.io/LubicaB_site/>.
+## Enable email and chat
 
-The Pages workflow is manual so it will not publish a frontend that cannot yet reach its backend.
+In the Render service's [Environment settings](https://dashboard.render.com/web/srv-dbglnn3bc2fs73b2pv0g/env), add these variables:
 
-## Configuration notes
+| Variable | Value |
+| --- | --- |
+| `INTERPRETER_EMAIL` | Address that should receive booking enquiries |
+| `RESEND_API_KEY` | Secret API key from Resend |
+| `EMAIL_FROM` | Sender address on a domain verified with Resend |
+| `OPENAI_API_KEY` | Secret API key for the chatbot |
 
-- The Render Blueprint starts on the free plan, which may spin down after inactivity and make the first request slower.
-- If Render assigns a different public URL, update `data-api-base` in `public/index.html` and `ALLOWED_ORIGINS` in `render.yaml` to match the actual backend and frontend URLs, then redeploy.
-- If using a custom Pages domain, add that exact origin to `ALLOWED_ORIGINS` as well.
-- Keep provider keys in Render's environment settings. Do not commit them or place them in frontend code.
+Keep the API keys in Render, not in chat, the website source, or GitHub. Save the variables and let Render redeploy. `OPENAI_MODEL` is optional and defaults to `gpt-4o-mini`.
+
+## Deploy changes
+
+The Pages workflow is intentionally manual. In GitHub, open **Actions → Deploy GitHub Pages → Run workflow** to publish the `public/` directory after a frontend change. Render automatically deploys the Node API when changes are pushed to `master`.
+
+The Render free instance can spin down after inactivity; its first request after a pause may take around 50 seconds. If the Render service URL changes, update `data-api-base` in `public/index.html` and `ALLOWED_ORIGINS` in Render's environment settings, then redeploy both services as needed.
